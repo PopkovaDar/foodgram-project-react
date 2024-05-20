@@ -13,10 +13,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-
-dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'foodgram-project-react', '.env')
-load_dotenv(dotenv_path)
-
+load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -25,13 +22,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = '8bkdhkjkbkjwddcdw87cnsjj78ftgtr4&zh$64p9126j+mf$@m4ddxi'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
-
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 # Application definition
 
 INSTALLED_APPS = [
@@ -47,6 +42,8 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'foodgram.apps.FoodgramConfig',
     'djoser',
+    'import_export',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -93,6 +90,8 @@ DATABASES = {
         'PORT': os.getenv('DB_PORT', 5432)
     }
 }
+
+
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
 
@@ -136,7 +135,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
 
     'DEFAULT_AUTHENTICATION_CLASSES': [

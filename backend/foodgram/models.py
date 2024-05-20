@@ -27,7 +27,7 @@ class Ingredient(models.Model):
 
 class Tag(models.Model):
     """Модель тегов."""
-    name = models.TextField(
+    name = models.CharField(
         max_length=TAG_INGREDIENT_MAX_LENGTH,
         verbose_name='Название',
     )
@@ -47,6 +47,9 @@ class Tag(models.Model):
         verbose_name_plural = 'Теги'
         ordering = ('name',)
 
+    def __str__(self):
+        return self.name
+
 
 class Recipe(models.Model):
     """Модель рецептов."""
@@ -63,7 +66,7 @@ class Recipe(models.Model):
     text = models.TextField(
         verbose_name='Описание',
     )
-    Ingredients = models.ManyToManyField(
+    ingredients = models.ManyToManyField(
         Ingredient,
         verbose_name='Ингредиенты',
     )
@@ -116,17 +119,19 @@ class TagRecipe(models.Model):
 
 
 class IngredientRecipe(models.Model):
-    """Модель тегов рецепта."""
+    """Модель byuhtllbtynjd рецепта."""
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
         verbose_name='Рецепты',
-        related_name='ingredientrecipe'
+        related_name='recipes'
     )
-    Ingredients = models.ManyToManyField(
+    ingredient = models.ForeignKey(
         Ingredient,
+        on_delete=models.CASCADE,
         verbose_name='Ингредиенты',
-        related_name='ingredientrecipe'
+        related_name='ingredient_recipe',
+        default=None,
     )
     amount = models.PositiveIntegerField(
         default=1,
@@ -136,7 +141,6 @@ class IngredientRecipe(models.Model):
     class Meta:
         verbose_name = 'Интгредиент рецепта'
         verbose_name_plural = 'Ингредиенты рецепта'
-        ordering = ('recipe',)
 
 
 class ShoppingList(models.Model):

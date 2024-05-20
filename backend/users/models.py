@@ -34,7 +34,7 @@ class User(AbstractUser):
     password = models.CharField(
         max_length=USER_MAX_LENGTH,
     )
-    REQUIRED_FIELDS = ('id', 'first_name', 'last_name', 'email')
+    REQUIRED_FIELDS = ('first_name', 'last_name', 'email')
 
     class Meta:
         verbose_name = 'Пользователь'
