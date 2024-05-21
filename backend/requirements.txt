@@ -33,3 +33,4 @@ urllib3==2.2.1
 django-cors-headers==3.13.0
 django-import-export
 drf-extra-fields
+sentry-sdk[django]

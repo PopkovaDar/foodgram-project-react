@@ -59,6 +59,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     queryset = Recipe.objects.all()
     permission_classes = [AllowAny]
+    serializer_class = RecipePostSerializer
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_serializer_class(self):

@@ -66,7 +66,10 @@ class AddRecipeIngredientSerializer(serializers.ModelSerializer):
     """Вспомогательный cериалайзер для корректного добавления
        Ингредиентов в рецепт при его создании."""
     id = serializers.PrimaryKeyRelatedField(
-        queryset=Ingredient.objects.all(), source='ingredient')
+        queryset=Ingredient.objects.all(),
+        source='ingredient',
+        write_only=True
+    )
 
     class Meta:
         model = IngredientRecipe
@@ -75,15 +78,13 @@ class AddRecipeIngredientSerializer(serializers.ModelSerializer):
 
 class IngredientAddRecipeSerializer(AddRecipeIngredientSerializer):
     """Сериализатор количества ингредиента для рецептов."""
-
+    id = serializers.IntegerField()
     name = serializers.CharField(
-        read_only=True,
-        source='ingredient.name'
-    )
+        read_only=True)
     measurement_unit = serializers.CharField(
-        read_only=True,
-        source='ingredient.measurement_unit'
-    )
+        read_only=True)
+    amount = serializers.CharField(
+        read_only=True)
 
     class Meta:
         model = IngredientRecipe
@@ -140,22 +141,24 @@ class RecipePostSerializer(serializers.ModelSerializer):
         """Сохранение в БД тэгов рецепта."""
         recipe.tags.set(tags)
 
-    def create_ingredients(self, ingredients_data):
-        ingredients_list = []
-        for ingredient_data in ingredients_data:
-            ingredient_id = ingredient_data.get('id')
-            ingredient_amount = ingredient_data.get('amount')
-            ingredient = Ingredient.objects.get(pk=ingredient_id)
-            ingredient_recipe = IngredientRecipe.objects.create(ingredient=ingredient, amount=ingredient_amount)
-            ingredients_list.append(ingredient_recipe)
-        return ingredients_list
+    def create_ingredients(self, ingredients, recipe):
+        """Сохранение в БД ингридиентов рецепта."""
+        for ingredient_data in ingredients:
+            ingredient = ingredient_data.get('ingredient')
+            amount = ingredient_data.get('amount')
+            IngredientRecipe.objects.create(
+                recipe=recipe,
+                ingredient=ingredient,
+                amount=amount
+            )
 
     def create(self, validated_data):
+        """Создание рецепта."""
         tags = validated_data.pop('tags')
-        ingredients_data = validated_data.pop('ingredients')
-        recipe = Recipe.objects.create(**validated_data)
+        ingredients = validated_data.pop('ingredients')
+        recipe = super().create(validated_data)
         self.add_tags(tags, recipe)
-        recipe.ingredients.add(*self.create_ingredients(ingredients_data))
+        self.create_ingredients(ingredients, recipe)
         return recipe
 
     def to_representation(self, recipe):
