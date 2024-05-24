@@ -84,11 +84,11 @@ class Recipe(models.Model):
         verbose_name='Время приготовления(в минутах)',
     )
     is_favorited = models.BooleanField(
-        default=True,
+        default=False,
         verbose_name='Рецепт в избранном',
     )
     is_in_shopping_cart = models.BooleanField(
-        default=True,
+        default=False,
         verbose_name='Рецепт в корзине',
     )
 
@@ -145,21 +145,19 @@ class IngredientRecipe(models.Model):
 
 class ShoppingList(models.Model):
     """Модель списка покупок."""
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        verbose_name='Пользователь',
-        related_name='shopppinglist'
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
         verbose_name='Рецепты',
-        related_name='shopppinglist'
+        related_name='shopping_list',
     )
 
     class Meta:
-        ordering = ('user',)
+        ordering = ('author',)
+        default_related_name = 'carts_list'
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Список покупок'
 
@@ -182,3 +180,13 @@ class Favorites(models.Model):
     class Meta:
         verbose_name_plural = 'Избранные рецепты'
         ordering = ('user',)
+
+
+class Muuuuu(models.Model):
+    """Модель избранного."""
+    tuturu = models.TextField(
+        verbose_name='Описание',
+    )
+
+    class Meta:
+        verbose_name_plural = 'Избранн ецепты'
