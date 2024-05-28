@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from foodgram.models import Tag, Ingredient, Recipe, ShoppingList
+from foodgram.models import Tag, Ingredient, Recipe, ShoppingList, Favorites
 from users.models import User
 from import_export.admin import ImportExportActionModelAdmin
 
@@ -56,6 +56,16 @@ class RecipeAdmin(admin.ModelAdmin):
 
 @admin.register(ShoppingList)
 class ShoppingListAdmin(admin.ModelAdmin):
+    """Управление пользователем со страницы админа."""
+    list_display = (
+        'author',
+        'recipe',
+    )
+    search_fields = ('author',)
+
+
+@admin.register(Favorites)
+class FavoritesAdmin(admin.ModelAdmin):
     """Управление пользователем со страницы админа."""
     list_display = (
         'author',

@@ -112,39 +112,38 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return RecipeGetSerializer
         return RecipePostSerializer
 
-    @action(methods=['post', 'delete'], detail=True,
-            permission_classes=(IsAuthenticated,),
-            url_path=r'(?P<id>\d+)/favorite')
-    def favorite(self, request, id):
-        """Добавление или удаление рецепта в избранное."""
+    @action(
+            methods=['POST', 'DELETE'],
+            detail=True,
+            permission_classes=[IsAuthenticated, ],
+            serializer_class=RecipeFavoriteSerializer,
+            queryset=Favorites.objects.all()
+            )
+    def favorite(self, request, pk):
+        user = request.user
+        data = {'author': user.id,
+                'recipe': pk}
         if request.method == 'POST':
-            if not Recipe.objects.filter(id=id):
-                return Response({'errors': 'Рецепт не найден!'},
-                                status=status.HTTP_400_BAD_REQUEST)
-            recipe = get_object_or_404(Recipe, id=id)
-            shoppingcart_status = Favorites.objects.filter(
-                user=request.user,
-                recipe=recipe).exists()
-            if shoppingcart_status:
-                return Response({'errors': 'Рецепт уже добавлен!'},
-                                status=status.HTTP_400_BAD_REQUEST)
-            serializer = RecipeFavoriteSerializer(data=request.data)
+            serializer = RecipeFavoriteSerializer(data=data, context={'request': request, 'pk': pk})
             serializer.is_valid(raise_exception=True)
-            serializer.save(user=request.user, recipe=recipe)
-            return Response(serializer.data,
-                            status=status.HTTP_201_CREATED)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         if request.method == 'DELETE':
-            recipe = get_object_or_404(Recipe, id=id)
-            if not Recipe.objects.filter(id=id):
-                return Response({'errors': 'Рецепт не найден!'},
-                                status=status.HTTP_400_BAD_REQUEST)
-            shoppingcart_status, _ = Favorites.objects.filter(
-                user=request.user,
-                recipe=recipe).delete()
-            if shoppingcart_status:
+            delete_follow = Favorites.objects.filter(
+                author=user,
+                recipe__id=pk)
+            if delete_follow.exists():
+                delete_follow.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response({'errors': 'Рецепт не найден в списке покупок.'},
+            return Response({'errors': "Рецепт не существует!"},
                             status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['GET'], permission_classes=[IsAuthenticated])
+    def favorites(self, request):
+        user = request.user
+        favorite_recipes = user.favorites_list.all()  # Получаем избранные рецепты для текущего пользователя
+        serializer = RecipeGetSerializer(favorite_recipes, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(
         methods=['POST', 'DELETE'],
@@ -177,23 +176,3 @@ class AuthUserViewSet(UserViewSet):
     serializer_class = UserRegisterSerializer
     http_method_names = ['post']
     permission_classes = (AllowAny,)
-
-
-
-class FavoriteListViewSet(
-    mixins.DestroyModelMixin,
-    mixins.CreateModelMixin,
-    viewsets.GenericViewSet
-):
-    """Список покупок."""
-    queryset = Recipe.objects.all()
-    serializer_class = RecipeFavoriteSerializer
-    permission_classes = (IsAuthenticated,)
-
-    def delete(self, request, *args, **kwargs):
-        recipe_id = self.kwargs.get('recipe_id')
-        recipe = get_object_or_404(Recipe, pk=recipe_id)
-        instance = Favorites.objects.filter(
-            user=request.user, recipe=recipe)
-        self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)

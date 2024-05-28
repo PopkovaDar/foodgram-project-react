@@ -102,6 +102,8 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     author = UserRecipeSerializer()
     ingredients = IngredientAddRecipeSerializer(many=True)
     tags = TagSerializer(many=True)
+    is_favorited = serializers.SerializerMethodField(read_only=True)
+    is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Recipe
@@ -118,13 +120,20 @@ class RecipeGetSerializer(serializers.ModelSerializer):
                   )
 
     def get_is_in_shopping_cart(self, obj):
-        """Проверка наличия рецепта в корзине."""
-
         request = self.context.get('request')
         if request.user.is_anonymous:
             return False
         return ShoppingList.objects.filter(
-            user=request.user,
+            author=request.user,
+            recipe=obj
+        ).exists()
+
+    def get_is_favorited(self, obj):
+        request = self.context.get('request')
+        if request.user.is_anonymous:
+            return False
+        return Favorites.objects.filter(
+            author=request.user,
             recipe=obj
         ).exists()
 
@@ -146,8 +155,6 @@ class RecipePostSerializer(serializers.ModelSerializer):
                   'tags',
                   'image',
                   'cooking_time',
-                  'is_favorited',
-                  'is_in_shopping_cart'
                   )
 
     def add_tags(self, tags, recipe):
@@ -174,9 +181,10 @@ class RecipePostSerializer(serializers.ModelSerializer):
         self.add_tags(tags, recipe)
         return recipe
 
-    def to_representation(self, recipe):
-        """Информация о созданном рецепте."""
-        return RecipeGetSerializer(recipe).data
+    def to_representation(self, instance):
+        context = {'request': self.context.get('request')}
+        serializers = RecipeGetSerializer(instance, context=context)
+        return serializers.data
 
     def update(self, instance, validated_data):
         """Обновление рецепта."""
@@ -312,17 +320,25 @@ class ShoppingListSerializer(serializers.ModelSerializer):
         return data
 
 
-class RecipeFavoriteSerializer(ShoppingListSerializer):
-    id = serializers.ReadOnlyField(source='recipe.id')
-    name = serializers.SerializerMethodField(source='recipe.name')
-    cooking_time = serializers.SerializerMethodField(source='recipe.cooking_time')
-    image = serializers.SerializerMethodField(source='recipe.image')
+class RecipeFavoriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Favorites
         fields = (
-            'id',
-            'name',
-            'image',
-            'cooking_time',
-        )
+            'author',
+            'recipe'
+            )
+
+    def to_representation(self, favorites):
+        recipe = favorites.recipe
+        serializers = RecipeFollowSerializer(recipe, context=self.context)
+        return serializers.data
+
+    def validate(self, data):
+        user = data.get('author')
+        recipe = data.get('recipe')
+        if user.favorites_list.filter(recipe=recipe).exists():
+            raise serializers.ValidationError(
+                'Рецепт уже добавлен!'
+            )
+        return data
