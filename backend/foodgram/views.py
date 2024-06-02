@@ -1,6 +1,6 @@
 from users.models import User, FollowUser
 from rest_framework import viewsets, mixins
-from foodgram.models import Tag, Ingredient, Recipe, ShoppingList, Favorites
+from foodgram.models import Tag, Ingredient, Recipe, ShoppingList, Favorites, IngredientRecipe
 from foodgram.serializers import TagSerializer, IngredientSerializer, FollowSerializer, RecipeFavoriteSerializer, FollowUserSerializer, RecipeGetSerializer, RecipePostSerializer, UserRegisterSerializer, UserSerializer, ShoppingListSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from foodgram.permissions import IsAuthorAdminOrReadOnly
@@ -10,6 +10,10 @@ from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from djoser.views import UserViewSet
+from foodgram.filters import IsFavoritedFilter
+from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import Sum
+from django.http import HttpResponse
 
 
 class Pagination(PageNumberPagination):
@@ -104,6 +108,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     permission_classes = [AllowAny]
     serializer_class = RecipePostSerializer
+    filter_backends = [DjangoFilterBackend, IsFavoritedFilter]
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_serializer_class(self):
@@ -138,13 +143,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response({'errors': "Рецепт не существует!"},
                             status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=['GET'], permission_classes=[IsAuthenticated])
-    def favorites(self, request):
-        user = request.user
-        favorite_recipes = user.favorites_list.all()  # Получаем избранные рецепты для текущего пользователя
-        serializer = RecipeGetSerializer(favorite_recipes, many=True, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
     @action(
         methods=['POST', 'DELETE'],
         detail=True,
@@ -167,6 +165,28 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 return Response(status=status.HTTP_204_NO_CONTENT)
             return Response({'errors': "Рецепт не существует!"},
                             status=status.HTTP_400_BAD_REQUEST)
+
+    @action(
+        methods=['GET'],
+        detail=False,
+        permission_classes=[IsAuthenticated, ],)
+    def download_shopping_cart(self, request):
+        """Качаем список покупок."""
+        ingredients = IngredientRecipe.objects.filter(
+            recipe__shopping_list__author=request.user
+        ).order_by('ingredient__name').values(
+            'ingredient__name', 'ingredient__measurement_unit'
+        ).annotate(amount=Sum('amount'))
+        text = 'Что купить: \n\n'
+        ingr_list = []
+        for recipe in ingredients:
+            ingr_list.append(recipe)
+        for i in ingr_list:
+            text += f'{i["ingredient__name"]}: {i["amount"]}, {i["ingredient__measurement_unit"]}.\n'
+        response = HttpResponse(text, content_type='text/plain')
+        response['Content-Disposition'] = ('attachment;'
+                                           'filename="shopping_list.txt"')
+        return response
 
 
 class AuthUserViewSet(UserViewSet):

@@ -1,7 +1,6 @@
 from django.db import models
 from users.models import User
-from django.core.validators import RegexValidator
-
+from users.constaints import COLOR_VALIDATOR
 from users.constaints import (
     TAG_INGREDIENT_MAX_LENGTH,
     TAG_MAX_LENGTH_HEX,
@@ -34,7 +33,7 @@ class Tag(models.Model):
     color = models.CharField(
         max_length=TAG_MAX_LENGTH_HEX,
         verbose_name='Цветовой код',
-        validators=[RegexValidator(regex=r'^#[0-9A-Fa-f]{6}$')],
+        validators=[COLOR_VALIDATOR,],
     )
     slug = models.SlugField(
         max_length=TAG_INGREDIENT_MAX_LENGTH,
@@ -138,6 +137,7 @@ class IngredientRecipe(models.Model):
     class Meta:
         verbose_name = 'Интгредиент рецепта'
         verbose_name_plural = 'Ингредиенты рецепта'
+        default_related_name = 'ingredient_recipe'
 
 
 class ShoppingList(models.Model):

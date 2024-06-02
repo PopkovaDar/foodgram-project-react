@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from users.constaints import (
     USER_MAX_LENGTH,
     EMAIL_MAX_LENGTH,
-    VALIDATOR_REGEX
+    USERNAME_REGEX
 )
 
 
@@ -13,7 +13,7 @@ class User(AbstractUser):
         unique=True,
         max_length=USER_MAX_LENGTH,
         verbose_name='Никнейм пользователя',
-        validators=[VALIDATOR_REGEX,]
+        validators=[USERNAME_REGEX,]
     )
 
     last_name = models.CharField(

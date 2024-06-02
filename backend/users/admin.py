@@ -4,6 +4,7 @@ from foodgram.models import Tag, Ingredient, Recipe, ShoppingList, Favorites
 from users.models import User
 from import_export.admin import ImportExportActionModelAdmin
 
+
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
     """Управление пользователем со страницы админа."""
