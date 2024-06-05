@@ -15,17 +15,13 @@ class User(AbstractUser):
         verbose_name='Никнейм пользователя',
         validators=[USERNAME_REGEX,]
     )
-
     last_name = models.CharField(
         max_length=USER_MAX_LENGTH,
         verbose_name='Имя',
-        null=True,
     )
-
     first_name = models.CharField(
         max_length=USER_MAX_LENGTH,
         verbose_name='Фамилия',
-        null=True,
     )
     email = models.EmailField(
         max_length=EMAIL_MAX_LENGTH,

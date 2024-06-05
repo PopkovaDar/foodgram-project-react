@@ -8,18 +8,12 @@ from rest_framework.response import Response
 from rest_framework import permissions, status
 from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
-from rest_framework.pagination import PageNumberPagination
 from djoser.views import UserViewSet
-from foodgram.filters import IsFavoritedFilter
+from foodgram.filters import FavoritedFilter, AuthorFilter, IngredientNameFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Sum
 from django.http import HttpResponse
-
-
-class Pagination(PageNumberPagination):
-    """Кастомная пагинация для Рецептов и Пользователей."""
-    page_size_query_param = 'limit'
-    page_size = 6
+from foodgram.pagination import Pagination
 
 
 class UserViewSet(UserViewSet):
@@ -33,7 +27,7 @@ class UserViewSet(UserViewSet):
         permission_classes=[IsAuthenticated],
     )
     def me(self, request):
-        serializer = UserSerializer(request.user)
+        serializer = UserSerializer(request.user, context={'request': request})
         if request.method == 'GET':
             return Response(serializer.data, status=status.HTTP_200_OK)
         serializer = UserSerializer(
@@ -44,21 +38,6 @@ class UserViewSet(UserViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-    @action(
-        detail=False,
-        methods=['GET'],
-        permission_classes=[IsAuthenticated],
-    )
-    def subscriptions(self, request):
-        sudscriptions = FollowUser.objects.filter(user=request.user)
-        pages = self.paginate_queryset(sudscriptions)
-        serializer = FollowUserSerializer(
-            pages,
-            many=True,
-            context={'request': request}
-        )
-        return self.get_paginated_response(serializer.data)
 
     @action(
         methods=['POST', 'DELETE'],
@@ -75,13 +54,31 @@ class UserViewSet(UserViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         if request.method == 'DELETE':
-            subscription, _ = FollowUser.objects.filter(
+            subscription = FollowUser.objects.filter(
                 author=author.id,
                 user=request.user.id).delete()
             if subscription:
                 return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response({'errors': "Вы не подписаны на этого автора!"},
+            if not subscription:
+                return Response({'errors': "Подписка не найдена!"},
+                                status=status.HTTP_404_NOT_FOUND)
+            return Response({'errors': "Вы не подписаны на данного автора!"},
                             status=status.HTTP_400_BAD_REQUEST)
+
+    @action(
+        detail=False,
+        methods=['GET'],
+        permission_classes=[IsAuthenticated],
+    )
+    def subscriptions(self, request):
+        queryset = FollowUser.objects.filter(user=request.user)
+        pages = self.paginate_queryset(queryset)
+        serializer = FollowUserSerializer(
+            pages,
+            many=True,
+            context={'request': request}
+        )
+        return self.get_paginated_response(serializer.data)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -98,7 +95,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    http_method_names = ['get', ]
+    filterset_class = (IngredientNameFilter,)
     pagination_class = None
 
 
@@ -108,7 +105,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     permission_classes = [AllowAny]
     serializer_class = RecipePostSerializer
-    filter_backends = [DjangoFilterBackend, IsFavoritedFilter]
+    filter_backends = [DjangoFilterBackend, FavoritedFilter, AuthorFilter,]
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_serializer_class(self):
@@ -187,12 +184,3 @@ class RecipeViewSet(viewsets.ModelViewSet):
         response['Content-Disposition'] = ('attachment;'
                                            'filename="shopping_list.txt"')
         return response
-
-
-class AuthUserViewSet(UserViewSet):
-    """Создание профиля."""
-
-    queryset = User.objects.all()
-    serializer_class = UserRegisterSerializer
-    http_method_names = ['post']
-    permission_classes = (AllowAny,)

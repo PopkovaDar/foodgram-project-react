@@ -5,6 +5,7 @@ from users.constaints import (
     TAG_INGREDIENT_MAX_LENGTH,
     TAG_MAX_LENGTH_HEX,
 )
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class Ingredient(models.Model):
@@ -12,6 +13,7 @@ class Ingredient(models.Model):
     name = models.CharField(
         max_length=TAG_INGREDIENT_MAX_LENGTH,
         verbose_name='Название ингредиента',
+        unique=True,
     )
     measurement_unit = models.CharField(
         max_length=TAG_INGREDIENT_MAX_LENGTH,
@@ -76,11 +78,13 @@ class Recipe(models.Model):
     )
     image = models.ImageField(
         verbose_name='Изображение рецепта',
-        upload_to='recipes_images'
+        upload_to='foodgram/'
     )
     cooking_time = models.PositiveIntegerField(
-        default=1,
         verbose_name='Время приготовления(в минутах)',
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(10000)]
     )
     created_at = models.DateTimeField(
         'Добавлено', auto_now_add=True)
@@ -127,11 +131,13 @@ class IngredientRecipe(models.Model):
         Ingredient,
         on_delete=models.CASCADE,
         verbose_name='Ингредиенты',
-        default=None,
     )
     amount = models.PositiveIntegerField(
         default=1,
         verbose_name='Количество ингредиента',
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(10000)]
     )
 
     class Meta:
