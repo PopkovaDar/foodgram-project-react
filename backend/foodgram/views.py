@@ -2,14 +2,14 @@ from users.models import User, FollowUser
 from rest_framework import viewsets, mixins
 from foodgram.models import Tag, Ingredient, Recipe, ShoppingList, Favorites, IngredientRecipe
 from foodgram.serializers import TagSerializer, IngredientSerializer, FollowSerializer, RecipeFavoriteSerializer, FollowUserSerializer, RecipeGetSerializer, RecipePostSerializer, UserRegisterSerializer, UserSerializer, ShoppingListSerializer
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from foodgram.permissions import IsAuthorAdminOrReadOnly
 from rest_framework.response import Response
-from rest_framework import permissions, status
+from rest_framework import status
 from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
-from foodgram.filters import FavoritedFilter, AuthorFilter, IngredientNameFilter
+from foodgram.filters import IngredientNameFilter, RecipeFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Sum
 from django.http import HttpResponse
@@ -56,12 +56,12 @@ class UserViewSet(UserViewSet):
         if request.method == 'DELETE':
             subscription = FollowUser.objects.filter(
                 author=author.id,
-                user=request.user.id).delete()
-            if subscription:
-                return Response(status=status.HTTP_204_NO_CONTENT)
+                user=request.user.id)
             if not subscription:
                 return Response({'errors': "Подписка не найдена!"},
-                                status=status.HTTP_404_NOT_FOUND)
+                                status=status.HTTP_400_BAD_REQUEST)
+            if subscription:
+                return Response(subscription.delete(), status=status.HTTP_204_NO_CONTENT)
             return Response({'errors': "Вы не подписаны на данного автора!"},
                             status=status.HTTP_400_BAD_REQUEST)
 
@@ -95,7 +95,8 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    filterset_class = (IngredientNameFilter,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = IngredientNameFilter
     pagination_class = None
 
 
@@ -103,9 +104,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """Вьюсет для создания рецептов."""
 
     queryset = Recipe.objects.all()
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthorAdminOrReadOnly, IsAuthenticatedOrReadOnly]
     serializer_class = RecipePostSerializer
-    filter_backends = [DjangoFilterBackend, FavoritedFilter, AuthorFilter,]
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = RecipeFilter
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_serializer_class(self):
@@ -119,7 +121,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             detail=True,
             permission_classes=[IsAuthenticated, ],
             serializer_class=RecipeFavoriteSerializer,
-            queryset=Favorites.objects.all()
+            queryset=Favorites.objects.all(),
             )
     def favorite(self, request, pk):
         user = request.user
@@ -138,7 +140,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 delete_follow.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
             return Response({'errors': "Рецепт не существует!"},
-                            status=status.HTTP_400_BAD_REQUEST)
+                            status=status.HTTP_404_NOT_FOUND)
 
     @action(
         methods=['POST', 'DELETE'],
@@ -161,7 +163,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 delete_follow.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
             return Response({'errors': "Рецепт не существует!"},
-                            status=status.HTTP_400_BAD_REQUEST)
+                            status=status.HTTP_404_NOT_FOUND)
 
     @action(
         methods=['GET'],

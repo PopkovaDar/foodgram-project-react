@@ -4,6 +4,8 @@ from users.models import User, FollowUser
 from djoser.serializers import UserSerializer,  UserCreateSerializer
 import django.contrib.auth.password_validation as validators
 from drf_extra_fields.fields import Base64ImageField
+from rest_framework.exceptions import PermissionDenied
+
 
 
 class UserRegisterSerializer(UserCreateSerializer):
@@ -182,9 +184,9 @@ class RecipePostSerializer(serializers.ModelSerializer):
                   )
 
     def validate(self, data):
-        ingredients = data['ingredients']
-        tags = data['tags']
-        image = data['image']
+        ingredients = data.get('ingredients')
+        tags = data.get('tags')
+        image = data.get('image')
         if not ingredients:
             raise serializers.ValidationError(
                 'Необходимо добавить ингредиенты!'
@@ -236,8 +238,9 @@ class RecipePostSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-        validated_data['author'] = self.context.get('request').user
-        recipe = super().create(validated_data)
+        request = self.context.get('request')
+        validated_data['author'] = request.user
+        recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
         self.create_ingredients(recipe, ingredients)
         return recipe

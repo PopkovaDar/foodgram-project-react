@@ -156,7 +156,10 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'foodgram.pagination.Pagination',
     'PAGE_SIZE': 6,
-    'PAGE_SIZE_QUERY_PARAM': 'limit'
+    'PAGE_SIZE_QUERY_PARAM': 'limit',
+
+    'DEFAULT_FILTER_BACKENDS':
+        ['django_filters.rest_framework.DjangoFilterBackend'],
 }
 
 DJOSER = {

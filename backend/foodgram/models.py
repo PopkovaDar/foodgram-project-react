@@ -39,7 +39,6 @@ class Tag(models.Model):
     )
     slug = models.SlugField(
         max_length=TAG_INGREDIENT_MAX_LENGTH,
-        verbose_name='slug',
         unique=True,
     )
 
@@ -96,27 +95,6 @@ class Recipe(models.Model):
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
         ordering = ('name',)
-
-
-class TagRecipe(models.Model):
-    """Модель тегов рецепта."""
-    tags = models.ForeignKey(
-        Tag,
-        on_delete=models.CASCADE,
-        verbose_name='Тег',
-        related_name='tagrecipe',
-    )
-    recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.CASCADE,
-        verbose_name='Рецепты',
-        related_name='tagrecipe'
-    )
-
-    class Meta:
-        verbose_name = 'Тег рецепта'
-        verbose_name_plural = 'Тег рецепта'
-        ordering = ('tags',)
 
 
 class IngredientRecipe(models.Model):
