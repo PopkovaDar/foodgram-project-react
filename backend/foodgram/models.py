@@ -1,11 +1,9 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
+from users.constaints import (COLOR_VALIDATOR, TAG_INGREDIENT_MAX_LENGTH,
+                              TAG_MAX_LENGTH_HEX)
 from users.models import User
-from users.constaints import COLOR_VALIDATOR
-from users.constaints import (
-    TAG_INGREDIENT_MAX_LENGTH,
-    TAG_MAX_LENGTH_HEX,
-)
-from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class Ingredient(models.Model):
@@ -69,7 +67,6 @@ class Recipe(models.Model):
     ingredients = models.ManyToManyField(
         Ingredient,
         verbose_name='Ингредиенты',
-        through='IngredientRecipe'
     )
     tags = models.ManyToManyField(
         Tag,
@@ -94,7 +91,7 @@ class Recipe(models.Model):
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
-        ordering = ('name',)
+        ordering = ('-created_at',)
 
 
 class IngredientRecipe(models.Model):
@@ -103,7 +100,6 @@ class IngredientRecipe(models.Model):
         Recipe,
         on_delete=models.CASCADE,
         verbose_name='Рецепты',
-        related_name='ingredient_recipe'
     )
     ingredient = models.ForeignKey(
         Ingredient,

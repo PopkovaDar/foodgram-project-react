@@ -1,7 +1,7 @@
-from foodgram.models import Ingredient, Recipe, Tag
 import django_filters
 from django_filters.rest_framework import FilterSet
-from rest_framework import filters
+
+from foodgram.models import Ingredient, Recipe, Tag
 
 
 class IngredientNameFilter(FilterSet):
@@ -28,12 +28,16 @@ class RecipeFilter(FilterSet):
     )
     is_favorited = django_filters.CharFilter(method='get_favorite')
     is_in_shopping_cart = django_filters.CharFilter(
-        method='filter_queryset_cart'
-        )
+        method='filter_queryset_cart')
 
     class Meta:
         model = Recipe
-        fields = ('tags', 'author', 'is_favorited', 'is_in_shopping_cart')
+        fields = (
+            'tags',
+            'author',
+            'is_favorited',
+            'is_in_shopping_cart'
+        )
 
     def filter_queryset(self, queryset):
         request = self.request

@@ -1,84 +1,20 @@
-from users.models import User, FollowUser
-from rest_framework import viewsets, mixins
-from foodgram.models import Tag, Ingredient, Recipe, ShoppingList, Favorites, IngredientRecipe
-from foodgram.serializers import TagSerializer, IngredientSerializer, FollowSerializer, RecipeFavoriteSerializer, FollowUserSerializer, RecipeGetSerializer, RecipePostSerializer, UserRegisterSerializer, UserSerializer, ShoppingListSerializer
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
-from foodgram.permissions import IsAuthorAdminOrReadOnly
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.decorators import action
-from django.shortcuts import get_object_or_404
-from djoser.views import UserViewSet
-from foodgram.filters import IngredientNameFilter, RecipeFilter
-from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Sum
 from django.http import HttpResponse
-from foodgram.pagination import Pagination
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import (IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
+from rest_framework.response import Response
 
-
-class UserViewSet(UserViewSet):
-    """Вьюсет для создания пользователей."""
-    pagination_class = Pagination
-
-    @action(
-        detail=False,
-        methods=['GET', 'PATCH'],
-        url_path='me',
-        permission_classes=[IsAuthenticated],
-    )
-    def me(self, request):
-        serializer = UserSerializer(request.user, context={'request': request})
-        if request.method == 'GET':
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        serializer = UserSerializer(
-            request.user,
-            data=request.data,
-            partial=True
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    @action(
-        methods=['POST', 'DELETE'],
-        detail=True,
-        permission_classes=[IsAuthenticated, ],)
-    def subscribe(self, request, id):
-        author = get_object_or_404(User, id=id)
-        data = {'author': author.id,
-                'user': request.user.id}
-        if request.method == 'POST':
-            serializer = FollowSerializer(data=data,
-                                          context={'request': request})
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if request.method == 'DELETE':
-            subscription = FollowUser.objects.filter(
-                author=author.id,
-                user=request.user.id)
-            if not subscription:
-                return Response({'errors': "Подписка не найдена!"},
-                                status=status.HTTP_400_BAD_REQUEST)
-            if subscription:
-                return Response(subscription.delete(), status=status.HTTP_204_NO_CONTENT)
-            return Response({'errors': "Вы не подписаны на данного автора!"},
-                            status=status.HTTP_400_BAD_REQUEST)
-
-    @action(
-        detail=False,
-        methods=['GET'],
-        permission_classes=[IsAuthenticated],
-    )
-    def subscriptions(self, request):
-        queryset = FollowUser.objects.filter(user=request.user)
-        pages = self.paginate_queryset(queryset)
-        serializer = FollowUserSerializer(
-            pages,
-            many=True,
-            context={'request': request}
-        )
-        return self.get_paginated_response(serializer.data)
+from foodgram.filters import IngredientNameFilter, RecipeFilter
+from foodgram.models import (Favorites, Ingredient, IngredientRecipe, Recipe,
+                             ShoppingList, Tag)
+from foodgram.permissions import IsAuthorAdminOrReadOnly
+from foodgram.serializers import (IngredientSerializer,
+                                  RecipeFavoriteSerializer,
+                                  RecipeGetSerializer, RecipePostSerializer,
+                                  ShoppingListSerializer, TagSerializer)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -124,11 +60,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
             queryset=Favorites.objects.all(),
             )
     def favorite(self, request, pk):
+        """Добавление и удаление из Избранного."""
         user = request.user
         data = {'author': user.id,
                 'recipe': pk}
         if request.method == 'POST':
-            serializer = RecipeFavoriteSerializer(data=data, context={'request': request, 'pk': pk})
+            serializer = RecipeFavoriteSerializer(
+                data=data,
+                context={'request': request, 'pk': pk}
+                )
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -147,11 +87,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
         detail=True,
         permission_classes=[IsAuthenticated, ],)
     def shopping_cart(self, request, pk):
+        """Добавление и удаление из Списка покупок."""
         user = request.user
         data = {'author': user.id,
                 'recipe': pk}
         if request.method == 'POST':
-            serializer = ShoppingListSerializer(data=data, context={'request': request, 'pk': pk})
+            serializer = ShoppingListSerializer(
+                data=data,
+                context={'request': request, 'pk': pk}
+                )
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -171,18 +115,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated, ],)
     def download_shopping_cart(self, request):
         """Качаем список покупок."""
-        ingredients = IngredientRecipe.objects.filter(
+        ingredients_list = IngredientRecipe.objects.filter(
             recipe__shopping_list__author=request.user
-        ).order_by('ingredient__name').values(
+        ).values(
             'ingredient__name', 'ingredient__measurement_unit'
         ).annotate(amount=Sum('amount'))
-        text = 'Что купить: \n\n'
-        ingr_list = []
-        for recipe in ingredients:
-            ingr_list.append(recipe)
-        for i in ingr_list:
-            text += f'{i["ingredient__name"]}: {i["amount"]}, {i["ingredient__measurement_unit"]}.\n'
+        text = 'Что купить: \n'
+        for ingredient in ingredients_list:
+            text += (f' - {ingredient["ingredient__name"]}: '
+                     f'{ingredient["amount"]} '
+                     f'{ingredient["ingredient__measurement_unit"]}.\n')
         response = HttpResponse(text, content_type='text/plain')
-        response['Content-Disposition'] = ('attachment;'
-                                           'filename="shopping_list.txt"')
+        response['Content-Disposition'] = 'attachment; filename="shopping_list.txt"'
         return response

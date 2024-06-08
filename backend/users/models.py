@@ -1,10 +1,7 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
-from users.constaints import (
-    USER_MAX_LENGTH,
-    EMAIL_MAX_LENGTH,
-    USERNAME_REGEX
-)
+from django.db import models
+
+from users.constaints import EMAIL_MAX_LENGTH, USER_MAX_LENGTH, USERNAME_REGEX
 
 
 class User(AbstractUser):
