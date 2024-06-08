@@ -64,7 +64,7 @@ class UserViewSet(UserViewSet):
                 return Response(
                     subscription,
                     status=status.HTTP_204_NO_CONTENT
-                    )
+                )
             return Response({'errors': "Вы не подписаны на данного автора!"},
                             status=status.HTTP_400_BAD_REQUEST)
 

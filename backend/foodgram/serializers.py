@@ -37,7 +37,7 @@ class PostIngredientRecipeSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredient.objects.all(),
         source='ingredient',
-        )
+    )
     recipe = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
@@ -67,7 +67,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     ingredients = GetIngredientRecipeSerializer(
         many=True,
         source='ingredient_recipe'
-        )
+    )
     tags = TagSerializer(many=True)
     image = Base64ImageField()
     is_favorited = serializers.SerializerMethodField(read_only=True)
@@ -200,11 +200,11 @@ class RecipePostSerializer(serializers.ModelSerializer):
         recipes.ingredient = validated_data.get(
             'ingredients',
             recipes.ingredients
-            )
+        )
         recipes.cooking_time = validated_data.get(
             'cooking_time',
             recipes.cooking_time
-            )
+        )
         recipes.image = validated_data.get('image', recipes.image)
         recipes.save()
         return recipes
@@ -224,7 +224,7 @@ class RecipeFollowSerializer(serializers.ModelSerializer):
             'name',
             'image',
             'cooking_time'
-            )
+        )
 
 
 class ShoppingListSerializer(serializers.ModelSerializer):
@@ -261,7 +261,7 @@ class RecipeFavoriteSerializer(serializers.ModelSerializer):
         fields = (
             'author',
             'recipe'
-            )
+        )
 
     def validate(self, data):
         """Валидация Избранного."""

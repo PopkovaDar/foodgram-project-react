@@ -35,7 +35,7 @@ class UserRecipeSerializer(serializers.ModelSerializer):
             'last_name',
             'first_name',
             'email',
-            )
+        )
 
 
 class FollowRecipeSerializer(serializers.ModelSerializer):
@@ -47,7 +47,7 @@ class FollowRecipeSerializer(serializers.ModelSerializer):
             'name',
             'image',
             'cooking_time'
-            )
+        )
 
 
 class UserSerializer(UserSerializer):
@@ -99,7 +99,7 @@ class FollowUserSerializer(serializers.ModelSerializer):
             'recipes',
             'recipes_count',
             'is_subscribed',
-            )
+        )
 
     def get_is_subscribed(self, recipe):
         """Проверка наличия подписки."""
@@ -133,7 +133,7 @@ class FollowSerializer(serializers.ModelSerializer):
             'id',
             'user',
             'author'
-            )
+        )
 
     def validate(self, data):
         """Валидация на подписку."""

@@ -53,12 +53,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return RecipePostSerializer
 
     @action(
-            methods=['POST', 'DELETE'],
-            detail=True,
-            permission_classes=[IsAuthenticated, ],
-            serializer_class=RecipeFavoriteSerializer,
-            queryset=Favorites.objects.all(),
-            )
+        methods=['POST', 'DELETE'],
+        detail=True,
+        permission_classes=[IsAuthenticated, ],
+        serializer_class=RecipeFavoriteSerializer,
+        queryset=Favorites.objects.all(),
+    )
     def favorite(self, request, pk):
         """Добавление и удаление из Избранного."""
         user = request.user
@@ -68,7 +68,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             serializer = RecipeFavoriteSerializer(
                 data=data,
                 context={'request': request, 'pk': pk}
-                )
+            )
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -95,7 +95,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             serializer = ShoppingListSerializer(
                 data=data,
                 context={'request': request, 'pk': pk}
-                )
+            )
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
