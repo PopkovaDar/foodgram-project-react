@@ -12,7 +12,7 @@ from users.serializers import (FollowSerializer, FollowUserSerializer,
 
 
 class UserViewSet(UserViewSet):
-    """Создание пользователейй."""
+    """Создание пользователей."""
     pagination_class = Pagination
 
     @action(
