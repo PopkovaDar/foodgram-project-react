@@ -8,7 +8,7 @@ from users.serializers import UserRecipeSerializer
 
 
 class TagSerializer(serializers.ModelSerializer):
-    """Сериализатор Теговd."""
+    """Сериализатор Тегов."""
     class Meta:
         model = Tag
         fields = ('id', 'name', 'color', 'slug')
