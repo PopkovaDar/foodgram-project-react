@@ -33,7 +33,7 @@ class IngredientRecipeSerializer(serializers.ModelSerializer):
 
 
 class PostIngredientRecipeSerializer(serializers.ModelSerializer):
-    """Сериализатор для добавления ингредиентов в рецепт."""
+    """Сериализатор для добавления ингредиентов в рецептt."""
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredient.objects.all(),
         source='ingredient',
