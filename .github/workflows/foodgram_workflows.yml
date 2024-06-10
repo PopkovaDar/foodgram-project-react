@@ -5,17 +5,8 @@ on: push
 jobs:
   tests:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:13.10
-        env:
-          POSTGRES_USER: foodgram_user
-          POSTGRES_PASSWORD: foodgram_password
-          POSTGRES_DB: foodgram
-        ports:
-          - 5432:5432
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
+    - name: Check out code
     - uses: actions/checkout@v3
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -27,14 +18,6 @@ jobs:
         python -m pip install --upgrade pip 
         pip install flake8==6.0.0 flake8-isort==6.0.0
         pip install -r ./backend/requirements.txt 
-    - name: Test with flake8 and django tests
-      env:
-        POSTGRES_USER: foodgram_user
-        POSTGRES_PASSWORD: foodgram_password
-        POSTGRES_DB: foodgram
-        DB_HOST: 127.0.0.1
-        DB_PORT: 5432
-        SECRET_KEY: SECRET_KEY
       run: |
         python -m flake8 backend/
 
@@ -134,7 +117,7 @@ jobs:
           sudo docker compose -f docker-compose.production.yml exec backend python manage.py makemigrations foodgram
           sudo docker compose -f docker-compose.production.yml exec backend python manage.py makemigrations users
           sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
-          sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic
+          sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic --noinput
           sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/static/. /backend_static/static/
 
 
