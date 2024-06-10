@@ -7,7 +7,7 @@ from users.models import User
 
 
 class Ingredient(models.Model):
-    """Модель ингредиентовd."""
+    """Модель ингредиентов."""
     name = models.CharField(
         max_length=TAG_INGREDIENT_MAX_LENGTH,
         verbose_name='Название ингредиента',
@@ -22,7 +22,6 @@ class Ingredient(models.Model):
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
         ordering = ('name',)
-        unique_together = ('name', 'measurement_unit')
 
 
 class Tag(models.Model):
