@@ -10,7 +10,7 @@ class User(AbstractUser):
         unique=True,
         max_length=USER_MAX_LENGTH,
         verbose_name='Никнейм пользователя',
-        validators=[USERNAME_REGEX,]
+        validators=[USERNAME_REGEX, ]
     )
     last_name = models.CharField(
         max_length=USER_MAX_LENGTH,
