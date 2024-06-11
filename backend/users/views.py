@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from foodgram.pagination import Pagination
+from api.pagination import Pagination
 from users.models import FollowUser, User
 from users.serializers import (FollowSerializer, FollowUserSerializer,
                                UserSerializer)

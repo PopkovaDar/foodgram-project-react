@@ -7,14 +7,13 @@ from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 
-from foodgram.filters import IngredientNameFilter, RecipeFilter
+from api.filters import IngredientNameFilter, RecipeFilter
+from api.permissions import IsAuthorAdminOrReadOnly
+from api.serializers import (IngredientSerializer, RecipeFavoriteSerializer,
+                             RecipeGetSerializer, RecipePostSerializer,
+                             ShoppingListSerializer, TagSerializer)
 from foodgram.models import (Favorites, Ingredient, IngredientRecipe, Recipe,
                              ShoppingList, Tag)
-from foodgram.permissions import IsAuthorAdminOrReadOnly
-from foodgram.serializers import (IngredientSerializer,
-                                  RecipeFavoriteSerializer,
-                                  RecipeGetSerializer, RecipePostSerializer,
-                                  ShoppingListSerializer, TagSerializer)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
