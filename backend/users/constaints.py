@@ -6,3 +6,4 @@ USERNAME_REGEX = RegexValidator(r'^[\w.@+-]+\Z')
 TAG_MAX_LENGTH_HEX = 7
 TAG_INGREDIENT_MAX_LENGTH = 200
 COLOR_VALIDATOR = RegexValidator(regex=r'^#[0-9A-Fa-f]{6}$')
+LIMIT_RECIPES = 6

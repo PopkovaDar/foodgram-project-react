@@ -13,5 +13,4 @@ class Command(BaseCommand):
             ingredient_data = json.loads(data_file_ingredients.read())
             for ingredients in ingredient_data:
                 Ingredient.objects.get_or_create(**ingredients)
-
-        print('Ингредиенты загружены в бд!')
+        print(self.stdout.write(self.style.SUCCESS('Ингредиенты загружены в бд!')))

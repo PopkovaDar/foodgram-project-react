@@ -84,9 +84,6 @@ class Recipe(models.Model):
     )
     created_at = models.DateTimeField(
         'Добавлено', auto_now_add=True)
-    is_published = models.BooleanField(
-        'Опубликовано', default=True, blank=True
-    )
 
     class Meta:
         verbose_name = 'Рецепт'
@@ -105,6 +102,7 @@ class IngredientRecipe(models.Model):
         Ingredient,
         on_delete=models.CASCADE,
         verbose_name='Ингредиенты',
+        related_name='recipe_ingredient'
     )
     amount = models.PositiveIntegerField(
         default=1,
@@ -118,6 +116,12 @@ class IngredientRecipe(models.Model):
         verbose_name = 'Интгредиент рецепта'
         verbose_name_plural = 'Ингредиенты рецепта'
         default_related_name = 'ingredient_recipe'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'ingredient', 'amount'],
+                name='unique_ingredient_recipe'
+            )
+        ]
 
 
 class ShoppingList(models.Model):
@@ -137,9 +141,15 @@ class ShoppingList(models.Model):
         default_related_name = 'carts_list'
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Список покупок'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['author', 'recipe'],
+                name='cart_author_recipe'
+            )
+        ]
 
 
-class Favorites(models.Model):
+class Favorite(models.Model):
     """Модель избранного."""
     author = models.ForeignKey(
         User,
@@ -149,10 +159,16 @@ class Favorites(models.Model):
         Recipe,
         on_delete=models.CASCADE,
         verbose_name='Рецепты',
-        related_name='favorites'
+        related_name='favorite'
     )
 
     class Meta:
         verbose_name_plural = 'Избранные рецепты'
         ordering = ('author',)
-        default_related_name = 'favorites_list'
+        default_related_name = 'favorite_list'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['author', 'recipe'],
+                name='favorite_author_recipe'
+            )
+        ]

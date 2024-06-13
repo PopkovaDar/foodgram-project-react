@@ -52,5 +52,5 @@ class RecipeFilter(FilterSet):
             return queryset.filter(shopping_list__author=request.user)
         is_favorited = request.query_params.get('is_favorited')
         if is_favorited == '1' and request.user.is_authenticated:
-            return queryset.filter(favorites__author=request.user)
+            return queryset.filter(favorite__author=request.user)
         return queryset
