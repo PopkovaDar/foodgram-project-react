@@ -259,10 +259,15 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
 class RecipePostSerializer(serializers.ModelSerializer):
     """Сериализатор создания рецептов."""
-    ingredients = PostIngredientRecipeSerializer(many=True, source='recipe_ingredient')
+    ingredients = PostIngredientRecipeSerializer(
+        many=True,
+        source='recipe_ingredient'
+    )
     tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(),
                                               many=True)
-    author = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    author = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
     image = Base64ImageField(use_url=False)
 
     class Meta:
