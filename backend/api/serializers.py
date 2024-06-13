@@ -317,14 +317,15 @@ class RecipePostSerializer(serializers.ModelSerializer):
 
     def create_ingredients(self, recipe, ingredients):
         """Создание ингредиентов."""
+        all_ingredients = []
         for ingredient_object in ingredients:
             ingredient = ingredient_object.get('ingredient')
             amount = ingredient_object.get('amount')
-            IngredientRecipe.objects.create(
-                recipe=recipe,
+            all_ingredients.append(IngredientRecipe(
                 ingredient=ingredient,
-                amount=amount
-            )
+                amount=amount,
+                recipe=recipe))
+        IngredientRecipe.objects.bulk_create(all_ingredients)
 
     def get_is_subscribed(self, author):
         """отображение подписок."""
