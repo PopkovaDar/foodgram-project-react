@@ -5,8 +5,8 @@ from rest_framework import serializers
 
 from foodgram.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
                              ShoppingList, Tag)
-from users.models import FollowUser, User
 from users.constaints import LIMIT_RECIPES
+from users.models import FollowUser, User
 
 
 class UserRegisterSerializer(UserCreateSerializer):
