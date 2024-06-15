@@ -144,15 +144,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if request.method == 'DELETE':
-            delete_follow = models.filter(
-                author=user,
-                recipe__id=pk)
-            if delete_follow.exists():
-                delete_follow.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response({'errors': "Рецепт не существует!"},
-                            status=status.HTTP_404_NOT_FOUND)
+        delete_follow = models.filter(
+            author=user,
+            recipe__id=pk)
+        if delete_follow.exists():
+            delete_follow.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({'errors': "Рецепт не существует!"},
+                        status=status.HTTP_404_NOT_FOUND)
 
     @action(
         methods=['POST', 'DELETE'],
@@ -163,7 +162,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def favorite(self, request, pk):
         """Добавление и удаление из Избранного."""
-        models = Favorite.objects.filter()
+        models = Favorite
         return self.post_delete(RecipeFavoriteSerializer, models, request, pk)
 
     @action(
@@ -172,7 +171,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated, ],)
     def shopping_cart(self, request, pk):
         """Добавление и удаление из Списка покупок."""
-        models = ShoppingList.objects.filter()
+        models = ShoppingList
         return self.post_delete(ShoppingListSerializer, models, request, pk)
 
     @action(

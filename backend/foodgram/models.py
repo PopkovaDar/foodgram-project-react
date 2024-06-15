@@ -92,7 +92,7 @@ class Recipe(models.Model):
 
 
 class IngredientRecipe(models.Model):
-    """Модель byuhtllbtynjd рецепта."""
+    """Модель ингредиентов рецепта."""
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
@@ -118,7 +118,7 @@ class IngredientRecipe(models.Model):
         default_related_name = 'ingredient_recipe'
         constraints = [
             models.UniqueConstraint(
-                fields=['recipe', 'ingredient', 'amount'],
+                fields=['recipe', 'ingredient'],
                 name='unique_ingredient_recipe'
             )
         ]

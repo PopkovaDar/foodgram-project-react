@@ -315,8 +315,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
             )
         return data
 
-    def create_ingredients(self, recipe, ingredients):
-        """Создание ингредиентов."""
+    def create_ingredients(serializer, recipe, ingredients):
         all_ingredients = []
         for ingredient_object in ingredients:
             ingredient = ingredient_object.get('ingredient')
@@ -326,16 +325,6 @@ class RecipePostSerializer(serializers.ModelSerializer):
                 amount=amount,
                 recipe=recipe))
         IngredientRecipe.objects.bulk_create(all_ingredients)
-
-    def get_is_subscribed(self, author):
-        """отображение подписок."""
-        request = self.context.get('request')
-        if request.user.is_authenticated:
-            return FollowUser.objects.filter(
-                author=author,
-                user=request.user,
-            ).exists()
-        return False
 
     def create(self, validated_data):
         """Создание рецепта."""
@@ -350,24 +339,27 @@ class RecipePostSerializer(serializers.ModelSerializer):
 
     def update(self, recipes, validated_data):
         """Обновление рецепта."""
-        recipes.name = validated_data.get('name', recipes.name)
-        recipes.text = validated_data.get('text', recipes.text)
-        recipes.cooking_time = validated_data.get(
-            'cooking_time',
-            recipes.cooking_time
-        )
-        recipes.image = validated_data.get('image', recipes.image)
+        tags = validated_data.pop('tags')
+        recipes.tags.set(tags)
         ingredients = validated_data.pop('recipe_ingredient')
-        if ingredients is not None:
-            IngredientRecipe.objects.all().delete()
-            self.create_ingredients(recipes, ingredients)
-        super().update(recipes, validated_data)
-        recipes.save()
-        return recipes
+        IngredientRecipe.objects.filter(recipe=recipes).delete()
+        self.create_ingredients(recipes, ingredients)
+        return super().update(recipes, validated_data)
 
     def to_representation(self, recipe):
         """Данные о Рецепте."""
-        return RecipeGetSerializer(recipe, context=self.context).data
+        serializers = RecipeGetSerializer(recipe, context=self.context)
+        return serializers.data
+
+    def get_is_subscribed(self, author):
+        """отображение подписок."""
+        request = self.context.get('request')
+        if request.user.is_authenticated:
+            return FollowUser.objects.filter(
+                author=author,
+                user=request.user,
+            ).exists()
+        return False
 
 
 class RecipeFollowSerializer(serializers.ModelSerializer):
