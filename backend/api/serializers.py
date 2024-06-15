@@ -341,9 +341,8 @@ class RecipePostSerializer(serializers.ModelSerializer):
         """Обновление рецепта."""
         tags = validated_data.pop('tags')
         recipes.tags.set(tags)
-        ingredients = validated_data.pop('recipe_ingredient')
-        recipes.ingredients.set(ingredients)
         super().update(recipes, validated_data)
+        ingredients = validated_data.pop('recipe_ingredient')
         IngredientRecipe.objects.all().delete()
         self.create_ingredients(recipes, ingredients)
         return recipes
