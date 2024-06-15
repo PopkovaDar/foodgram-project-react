@@ -348,8 +348,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
 
     def to_representation(self, recipe):
         """Данные о Рецепте."""
-        serializers = RecipeGetSerializer(recipe, context=self.context)
-        return serializers.data
+        return RecipeGetSerializer(recipe, context=self.context).data
 
     def get_is_subscribed(self, author):
         """отображение подписок."""
