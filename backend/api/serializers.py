@@ -338,7 +338,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, recipes, validated_data):
-        """Обновление рецепта."""
+        """Обновление рецептаа."""
         tags = validated_data.pop('tags')
         recipes.tags.set(tags)
         ingredients = validated_data.pop('recipe_ingredient')
