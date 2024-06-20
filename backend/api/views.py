@@ -52,7 +52,7 @@ class UserViewSet(UserViewSet):
         permission_classes=[IsAuthenticated, ],)
     def subscribe(self, request, id):
         """Подписка или отписка от автора."""
-        author = get_object_or_404(User, id=id) 
+        author = get_object_or_404(User, id=id)
         user = request.user
         data = {'author': author.id,
                 'user': user.id}
@@ -63,19 +63,19 @@ class UserViewSet(UserViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        subscription = FollowUser.objects.filter( 
-            author=author.id, 
-            user=user.id) 
-        if not subscription.exists(): 
-            return Response({'errors': "Подписка не найдена!"}, 
-                            status=status.HTTP_400_BAD_REQUEST) 
-        if subscription.exists(): 
-            subscription.delete() 
-            return Response( 
-                subscription, 
-                status=status.HTTP_204_NO_CONTENT 
-            ) 
-        return Response({'errors': "Вы не подписаны на данного автора!"}, 
+        subscription = FollowUser.objects.filter(
+            author=author.id,
+            user=user.id)
+        if not subscription.exists():
+            return Response({'errors': "Подписка не найдена!"},
+                            status=status.HTTP_400_BAD_REQUEST)
+        if subscription.exists():
+            subscription.delete()
+            return Response(
+                subscription,
+                status=status.HTTP_204_NO_CONTENT
+            )
+        return Response({'errors': "Вы не подписаны на данного автора!"},
                         status=status.HTTP_400_BAD_REQUEST)
 
     @action(
