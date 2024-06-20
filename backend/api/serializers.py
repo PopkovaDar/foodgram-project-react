@@ -133,7 +133,6 @@ class FollowSerializer(serializers.ModelSerializer):
     class Meta:
         model = FollowUser
         fields = (
-            'id',
             'user',
             'author'
         )
@@ -196,6 +195,8 @@ class PostIngredientRecipeSerializer(serializers.ModelSerializer):
 
 class GetIngredientRecipeSerializer(serializers.ModelSerializer):
     """Сериализатор количества ингредиента для чтения рецептов."""
+    id = serializers.ReadOnlyField(
+        source='ingredient.id')
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
         source='ingredient.measurement_unit')
@@ -212,7 +213,7 @@ class GetIngredientRecipeSerializer(serializers.ModelSerializer):
 
 class RecipeGetSerializer(serializers.ModelSerializer):
     """Сериализатор отображения рецептов при GET запросе."""
-    author = UserRecipeSerializer()
+    author = UserSerializer()
     ingredients = GetIngredientRecipeSerializer(
         many=True,
         source='ingredient_recipe'
@@ -351,10 +352,11 @@ class RecipePostSerializer(serializers.ModelSerializer):
         """Данные о Рецепте."""
         return RecipeGetSerializer(recipe, context=self.context).data
 
-    def get_is_subscribed(self, author):
+    def get_is_subscribed(self, obj):
         """отображение подписок."""
         request = self.context.get('request')
         if request.user.is_authenticated:
+            author = obj.author
             return FollowUser.objects.filter(
                 author=author,
                 user=request.user,
